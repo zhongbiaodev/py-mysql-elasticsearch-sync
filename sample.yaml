@@ -1,0 +1,42 @@
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  user: foo
+  password: bar
+  db: mydb
+  table: mytable
+
+elastic:
+  host: 127.0.0.1
+  port: 9200
+  bulk_size: 100
+  index: article
+  type: article
+
+  index_by:
+    field:
+    field_type:
+    format:
+
+  type_by:
+    field:
+    field_type:
+    format:
+
+mapping:
+  _id: uuid
+
+logging:
+  file: mylog.log
+
+binlog_sync:
+  record_file: binlog.info
+
+email:
+  from:
+    host: smtp.example.com
+    username: sender@example.com
+    password: senderpass
+  to:
+    - first_recipient@example.com
+    - second_recipient@example.com
