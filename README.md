@@ -1,2 +1,8 @@
 # py-mysql-elasticsearch-sync
-An MySQL to Elasticsearch  sync tool, written with Python.
+MySQL to Elasticsearch sync tool, written with Python3.
+
+## TODO
+- [ ]  Documentation
+- [ ]  Packaging
+- [ ]  MultiIndex Supporting
+
