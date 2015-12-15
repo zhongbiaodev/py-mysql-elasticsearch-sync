@@ -6,7 +6,7 @@ This tool helps you to initialize MySQL dump table to Elasticsearch by parsing m
 
 ## Installation
 By following these steps.
-##### 1. Python
+##### 1. Python3
 This tool is written in Python3.4, so you must install Python3.4 first, by following [this guide](https://docs.python.org/3.4/using/index.html)
 ##### 2. ibxml2 and libxslt
 Also, this tool depends on python lxml package, so that you should install  the lxml's dependecies correctly, the libxml2 and libxslt are required.
