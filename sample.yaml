@@ -1,3 +1,4 @@
+# The mysql database which you want to sync
 mysql:
   host: 127.0.0.1
   port: 3306
@@ -5,6 +6,7 @@ mysql:
   password: bar
   db: mydb
   table: mytable
+  server_id: 1  # this should be unique
 
 elastic:
   host: 127.0.0.1
@@ -13,30 +15,26 @@ elastic:
   index: article
   type: article
 
-  index_by:
-    field:
-    field_type:
-    format:
-
-  type_by:
-    field:
-    field_type:
-    format:
-
+# If you want to map your column, put the column name as the value, and es field name as the key,
+# Particularly , if you set _id as follows, it will use myid column as the index doc's id, or ES will generate an id as default
 mapping:
-  _id: uuid
+  _id: myid
+  es_field_name: mysql_column_name
 
+# The log file's path
 logging:
   file: mylog.log
 
+# The record file's path, which record the latest synced binlog file and position
 binlog_sync:
   record_file: binlog.info
 
+# If you want to email notification when error occurs, fill this
 email:
-  from:
+  from: # the sender's email, uses smtp protocol
     host: smtp.example.com
     username: sender@example.com
-    password: senderpass
-  to:
+    password: senderpassword
+  to:  # a list of notification recipients
     - first_recipient@example.com
     - second_recipient@example.com

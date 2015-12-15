@@ -55,7 +55,10 @@ The latest synced binlog file and position are recorded in your info file which 
 Or if you  but want to load it from your own dumpfile. You should dump your table first as xml format(by adding ```-X```option to your mysqldump command) 
 
 then
-```python3 main.py path/to/your/config.yaml --fromfile```
+
+```
+python3 main.py path/to/your/config.yaml --fromfile
+```
 to start sync, when xml sync is over, it will also start binlog sync.
 
 ## Deployment
