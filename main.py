@@ -345,7 +345,7 @@ def sync_from_stream():
 
 
 def sync_from_file():
-    logging.info("Start to dump from stream")
+    logging.info("Start to dump from xml file")
     docs = reduce(lambda x, y: y(x), [xml_parser, formatter, mapper, processor],
                   xml_file_loader(config['xml_file']['filename']))
     updater(docs)
