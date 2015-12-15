@@ -17,7 +17,7 @@ For example, in CentOS:
 sudo yum install libxml2 libxml2-devel libxslt libxslt-devel
 ```
 
-or in Debian/Ubuntu:
+Or in Debian/Ubuntu:
 
 ```
 sudo apt-get install libxml2-dev libxslt-dev python-dev
@@ -50,7 +50,7 @@ python3 main.py path/to/your/config.yaml
 ```
 and the tool will dump your data as stream to sync, when dump is over, it will start to sync binlog.
 
-the latest synced binlog file and position are recorded in your info file which is configured in your config file. You can restart dump step by remove it, or you can change sync position by edit it.
+The latest synced binlog file and position are recorded in your info file which is configured in your config file. You can restart dump step by remove it, or you can change sync position by edit it.
 
 Or if you  but want to load it from your own dumpfile. You should dump your table first as xml format(by adding ```-X```option to your mysqldump command) 
 
@@ -58,11 +58,11 @@ then
 ```python3 main.py path/to/your/config.yaml --fromfile```
 to start sync, when xml sync is over, it will also start binlog sync.
 
-## Deploying
+## Deployment
 We provide an upstart script to help you deploy this tool,since we use virtualenv for requirements isolation, you must edit it for your own condition, besides, you can deploy it in your own way.
 
 
 ## TODO
-- [ ]  Packaging
-- [ ]  MultiIndex Supporting
-
+- [ ] Packaging
+- [ ] MultiIndex Supporting
+- [ ] Multi table Supporting
