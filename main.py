@@ -349,7 +349,7 @@ def main():
     """
     try:
         if not log_file and not log_pos:
-            if len(sys.argv) > 2 and sys.argv[2] == 'fromfile':
+            if len(sys.argv) > 2 and sys.argv[2] == '--fromfile':
                 sync_from_file()
             else:
                 sync_from_stream()
