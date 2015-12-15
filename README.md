@@ -59,7 +59,7 @@ then
 to start sync, when xml sync is over, it will also start binlog sync.
 
 ## Deploying
-We provide an upstart script to help you deploy this tool, you can edit it for your own condition, besides, you can deploy it in your own way.
+We provide an upstart script to help you deploy this tool,since we use virtualenv for requirements isolation, you must edit it for your own condition, besides, you can deploy it in your own way.
 
 
 ## TODO

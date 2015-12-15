@@ -5,4 +5,3 @@ pyyaml
 elasticsearch==1.9.0
 elasticsearch_dsl
 lxml==3.4.4
-#yum install libxslt-devel libxml2-devel
