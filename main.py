@@ -46,15 +46,14 @@ else:
 
 table_structure = {}
 
-DUMP_CMD = 'mysqldump -h {host} -P {port} -u {user} --password={password} {db} {table} --default-character-set=utf8' \
-           ' -X'\
+DUMP_CMD = 'mysqldump -h {host} -P {port} -u {user} --password={password} {db} {table} ' \
+           '--default-character-set=utf8 -X'\
     .format(**config['mysql'])
 BINLOG_CFG = {key: config['mysql'][key] for key in ['host', 'port', 'user', 'password', 'db']}
 BULK_SIZE = config.get('elastic').get('bulk_size')
 
 log_file = None
 log_pos = None
-
 
 record_path = config['binlog_sync']['record_file']
 if os.path.isfile(record_path):
@@ -102,6 +101,9 @@ def bulker(bulk_size=BULK_SIZE):
 
 
 def updater(data):
+    """
+    encapsulation of bulker
+    """
     u = bulker()
     u.send(None)  # push the generator to first yield
     for item in data:
@@ -110,6 +112,9 @@ def updater(data):
 
 
 def json_serializer(obj):
+    """
+    format the object which json not supported
+    """
     if isinstance(obj, datetime):
         return obj.isoformat()
     raise TypeError('Type not serializable')
@@ -163,6 +168,9 @@ def mapper(data):
 
 
 def formatter(data):
+    """
+    format every field from xml, according to parsed table structure
+    """
     for item in data:
         for field, serializer in table_structure.items():
             if item['doc'][field]:
@@ -172,6 +180,9 @@ def formatter(data):
 
 
 def binlog_loader():
+    """
+    read row from binlog
+    """
     global log_file
     global log_pos
     if log_file and log_pos:
@@ -212,6 +223,9 @@ def binlog_loader():
 
 
 def parse_table_structure(data):
+    """
+    parse the table structure
+    """
     global table_structure
     for item in data.iter():
         if item.tag == 'field':
@@ -222,7 +236,7 @@ def parse_table_structure(data):
             elif 'float' in type:
                 serializer = float
             elif 'datetime' in type:
-                if '(6)' in type:
+                if '(' in type:
                     serializer = lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f')
                 else:
                     serializer = lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
@@ -301,6 +315,9 @@ def xml_file_loader(filename):
 
 
 def send_email(title, content):
+    """
+    send notification email
+    """
     if not config.get('email'):
         return
 
