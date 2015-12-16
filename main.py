@@ -6,6 +6,7 @@ import requests
 import subprocess
 import simplejson as json
 import logging
+import shlex
 from datetime import datetime
 from lxml.etree import iterparse
 from functools import reduce
@@ -47,8 +48,10 @@ else:
 table_structure = {}
 
 DUMP_CMD = 'mysqldump -h {host} -P {port} -u {user} --password={password} {db} {table} ' \
-           '--default-character-set=utf8 -X'\
+           '--default-character-set=utf8 -X' \
     .format(**config['mysql'])
+
+
 BINLOG_CFG = {key: config['mysql'][key] for key in ['host', 'port', 'user', 'password', 'db']}
 BULK_SIZE = config.get('elastic').get('bulk_size')
 
@@ -257,7 +260,6 @@ def parse_and_remove(f, path):
     doc = iterparse(f, ('start', 'end'), recover=True, encoding='utf-8')
     # Skip the root element
     next(doc)
-
     tag_stack = []
     elem_stack = []
     for event, elem in doc:
@@ -289,9 +291,7 @@ def xml_parser(f_obj):
             k = field.attrib.get('name')
             v = field.text
             doc[k] = v
-        # print(rv)
         yield {'action': 'index', 'doc': doc}
-        # print(doc)
 
 
 def save_binlog_record():
@@ -303,9 +303,10 @@ def save_binlog_record():
 
 def xml_dump_loader():
     p = subprocess.Popen(
-        DUMP_CMD.split(),
+        shlex.split(DUMP_CMD),
         stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL)
+        stderr=subprocess.DEVNULL,
+        close_fds=True)
     return p.stdout  # can be used as file object. (stream io)
 
 
