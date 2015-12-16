@@ -284,10 +284,9 @@ def xml_parser(f_obj):
     """
     parse mysqldump XML streaming, convert every item to dict object. 'database/table_data/row'
     """
-
     for row in parse_and_remove(f_obj, 'database/table_data/row'):
         doc = {}
-        for field in row.iter():
+        for field in row.iter(tag='field'):
             k = field.attrib.get('name')
             v = field.text
             doc[k] = v
