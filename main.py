@@ -48,9 +48,8 @@ else:
 table_structure = {}
 
 DUMP_CMD = 'mysqldump -h {host} -P {port} -u {user} --password={password} {db} {table} ' \
-           '--default-character-set=utf8 -X' \
-    .format(**config['mysql'])
-
+           '--default-character-set=utf8 -X'.format(**config['mysql'])
+REMOVE_INVALID_CHAR_CMD = 'tr -cd "[:print:]"'
 
 BINLOG_CFG = {key: config['mysql'][key] for key in ['host', 'port', 'user', 'password', 'db']}
 BULK_SIZE = config.get('elastic').get('bulk_size')
@@ -301,13 +300,19 @@ def save_binlog_record():
 
 
 def xml_dump_loader():
-    p = subprocess.Popen(
+    mysqldump = subprocess.Popen(
         shlex.split(DUMP_CMD),
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         close_fds=True)
-    return p.stdout  # can be used as file object. (stream io)
 
+    removed_invalid_char = subprocess.Popen(
+        shlex.split(REMOVE_INVALID_CHAR_CMD),
+        stdin=mysqldump.stdout,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        close_fds=True)
+    return removed_invalid_char.stdout  # can be used as file object. (stream io)
 
 def xml_file_loader(filename):
     f = open(filename, 'rb')  # bytes required
