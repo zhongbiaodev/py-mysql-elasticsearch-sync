@@ -49,7 +49,7 @@ table_structure = {}
 
 DUMP_CMD = 'mysqldump -h {host} -P {port} -u {user} --password={password} {db} {table} ' \
            '--default-character-set=utf8 -X'.format(**config['mysql'])
-REMOVE_INVALID_CHAR_CMD = 'tr -cd "[:print:]"'
+REMOVE_INVALID_CHAR_CMD = 'iconv -f utf-8 -t utf-8 -c'
 
 BINLOG_CFG = {key: config['mysql'][key] for key in ['host', 'port', 'user', 'password', 'db']}
 BULK_SIZE = config.get('elastic').get('bulk_size')
