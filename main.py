@@ -257,7 +257,7 @@ def parse_and_remove(f, path):
     snippet from python cookbook, for parsing large xml file
     """
     path_parts = path.split('/')
-    doc = iterparse(f, ('start', 'end'), recover=True, encoding='utf-8')
+    doc = iterparse(f, ('start', 'end'), recover=False, encoding='utf-8', huge_tree=True)
     # Skip the root element
     next(doc)
     tag_stack = []
