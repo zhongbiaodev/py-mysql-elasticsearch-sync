@@ -49,7 +49,7 @@ table_structure = {}
 
 DUMP_CMD = 'mysqldump -h {host} -P {port} -u {user} --password={password} {db} {table} ' \
            '--default-character-set=utf8 -X'.format(**config['mysql'])
-REMOVE_INVALID_CHAR_CMD = 'iconv -f utf-8 -t utf-8 -c'
+# REMOVE_INVALID_CHAR_CMD = 'iconv -f utf-8 -t utf-8 -c'
 
 BINLOG_CFG = {key: config['mysql'][key] for key in ['host', 'port', 'user', 'password', 'db']}
 BULK_SIZE = config.get('elastic').get('bulk_size')
@@ -147,7 +147,7 @@ def processor(data):
             body = json.dumps({'doc': item['doc']}, default=json_serializer)
             rv = meta + '\n' + body
         elif item['action'] == 'delete':
-            rv = json.dumps(item['doc'], default=json_serializer) + '\n'
+            rv = meta + '\n'
         elif item['action'] == 'create':
             body = json.dumps(item['doc'], default=json_serializer)
             rv = meta + '\n' + body
@@ -306,13 +306,15 @@ def xml_dump_loader():
         stderr=subprocess.DEVNULL,
         close_fds=True)
 
-    removed_invalid_char = subprocess.Popen(
-        shlex.split(REMOVE_INVALID_CHAR_CMD),
-        stdin=mysqldump.stdout,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        close_fds=True)
-    return removed_invalid_char.stdout  # can be used as file object. (stream io)
+    # removed_invalid_char = subprocess.Popen(
+    #     shlex.split(REMOVE_INVALID_CHAR_CMD),
+    #     stdin=mysqldump.stdout,
+    #     stdout=subprocess.PIPE,
+    #     stderr=subprocess.DEVNULL,
+    #     close_fds=True)
+    # return removed_invalid_char.stdout  # can be used as file object. (stream io)
+    return mysqldump.stdout
+
 
 def xml_file_loader(filename):
     f = open(filename, 'rb')  # bytes required
