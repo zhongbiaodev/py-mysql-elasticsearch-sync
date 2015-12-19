@@ -7,6 +7,7 @@ import subprocess
 import simplejson as json
 import logging
 import shlex
+import codecs
 from datetime import datetime
 from lxml.etree import iterparse
 from functools import reduce
@@ -49,7 +50,6 @@ table_structure = {}
 
 DUMP_CMD = 'mysqldump -h {host} -P {port} -u {user} --password={password} {db} {table} ' \
            '--default-character-set=utf8 -X'.format(**config['mysql'])
-# REMOVE_INVALID_CHAR_CMD = 'iconv -f utf-8 -t utf-8 -c'
 
 BINLOG_CFG = {key: config['mysql'][key] for key in ['host', 'port', 'user', 'password', 'db']}
 BULK_SIZE = config.get('elastic').get('bulk_size')
@@ -305,15 +305,9 @@ def xml_dump_loader():
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         close_fds=True)
-
-    # removed_invalid_char = subprocess.Popen(
-    #     shlex.split(REMOVE_INVALID_CHAR_CMD),
-    #     stdin=mysqldump.stdout,
-    #     stdout=subprocess.PIPE,
-    #     stderr=subprocess.DEVNULL,
-    #     close_fds=True)
-    # return removed_invalid_char.stdout  # can be used as file object. (stream io)
-    return mysqldump.stdout
+    stream = codecs.EncodedFile(mysqldump.stdout, data_encoding='utf-8',
+                                file_encoding='utf-8', errors='xmlcharrefreplace')
+    return stream
 
 
 def xml_file_loader(filename):
