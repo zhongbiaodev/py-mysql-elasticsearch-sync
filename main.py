@@ -311,7 +311,7 @@ def xml_dump_loader():
         stderr=subprocess.DEVNULL,
         close_fds=True)
     stream = codecs.EncodedFile(mysqldump.stdout, data_encoding='utf-8',
-                                file_encoding='utf-8', errors='xmlcharrefreplace')
+                                file_encoding='utf-8', errors='replace')
     return stream
 
 

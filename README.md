@@ -3,6 +3,7 @@ Simple and fast MySQL to Elasticsearch sync tool, written in Python3.
 
 ## Introduction
 This tool helps you to initialize MySQL dump table to Elasticsearch by parsing mysqldump, then incremental sync MySQL table to Elasticsearch by processing MySQL Binlog.
+Also, during the binlog syncing, this tool will save the binlog sync position, so that it is easy to recover after this tool being shutdown for any reason.
 
 ## Installation
 By following these steps.
