@@ -50,6 +50,7 @@ table_structure = {}
 
 DUMP_CMD = 'mysqldump -h {host} -P {port} -u {user} --password={password} {db} {table} ' \
            '--default-character-set=utf8 -X'.format(**config['mysql'])
+REMOVE_INVALID_PIPE = "sed 's/[^[:print:]]//g'"
 
 BINLOG_CFG = {key: config['mysql'][key] for key in ['host', 'port', 'user', 'password', 'db']}
 BULK_SIZE = config.get('elastic').get('bulk_size')
@@ -310,9 +311,15 @@ def xml_dump_loader():
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         close_fds=True)
-    stream = codecs.EncodedFile(mysqldump.stdout, data_encoding='utf-8',
-                                file_encoding='utf-8', errors='replace')
-    return stream
+
+    remove_invalid_pipe = subprocess.Popen(
+        shlex.split(REMOVE_INVALID_PIPE),
+        stdin=mysqldump.stdout,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        close_fds=True)
+
+    return remove_invalid_pipe.stdout
 
 
 def xml_file_loader(filename):
