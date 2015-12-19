@@ -50,7 +50,7 @@ table_structure = {}
 
 DUMP_CMD = 'mysqldump -h {host} -P {port} -u {user} --password={password} {db} {table} ' \
            '--default-character-set=utf8 -X'.format(**config['mysql'])
-REMOVE_INVALID_PIPE = r'tr -d "\0\1\2\3\4\5\6\7\8\11\12\14\15\16\17\18\19\20\21\22\23\24\25\26\27\28\29\30\31"'
+REMOVE_INVALID_PIPE = r'tr -d "\00\01\02\03\04\05\06\07\10\13\14\16\17\20\21\22\23\24\25\26\27\30\31\32\33\34\35\36\37"'
 
 BINLOG_CFG = {key: config['mysql'][key] for key in ['host', 'port', 'user', 'password', 'db']}
 BULK_SIZE = config.get('elastic').get('bulk_size')
