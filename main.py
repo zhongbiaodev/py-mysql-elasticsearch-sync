@@ -176,7 +176,12 @@ def formatter(data):
     for item in data:
         for field, serializer in table_structure.items():
             if item['doc'][field]:
-                item['doc'][field] = serializer(item['doc'][field])
+                try:
+                    item['doc'][field] = serializer(item['doc'][field])
+                except ValueError as e:
+                    logger.error("Error occurred during format, ErrorMessage:{}, ErrorItem:{}".format(str(e),
+                                                                                                      str(item)))
+                    item['doc'][field] = None
         # print(item)
         yield item
 
