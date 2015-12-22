@@ -7,12 +7,13 @@ import subprocess
 import simplejson as json
 import logging
 import shlex
-import codecs
 from datetime import datetime
 from lxml.etree import iterparse
 from functools import reduce
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.row_event import DeleteRowsEvent, UpdateRowsEvent, WriteRowsEvent
+
+__version__ = '0.2.0'
 
 
 def cleanup(*args):
@@ -391,6 +392,10 @@ def main():
         logging.error(traceback.format_exc())
         send_email('es sync error', traceback.format_exc())
         raise
+
+
+def run():
+    main()
 
 if __name__ == '__main__':
     main()
