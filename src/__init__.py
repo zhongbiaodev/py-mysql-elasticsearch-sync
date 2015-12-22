@@ -156,8 +156,8 @@ def processor(data):
             body = json.dumps(item['doc'], default=json_serializer)
             rv = meta + '\n' + body
         else:
-            logging.error('unknown action type')
-            raise TypeError('unknown action type')
+            logging.error('unknown action type in doc')
+            raise TypeError('unknown action type in doc')
         yield rv
 
 
@@ -228,6 +228,9 @@ def binlog_loader():
                     'action': 'index',
                     'doc': row['values']
                 }
+            else:
+                logging.error('unknown action type in binlog')
+                raise TypeError('unknown action type in binlog')
             yield rv
             # print(rv)
     stream.close()
