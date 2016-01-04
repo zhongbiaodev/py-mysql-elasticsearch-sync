@@ -43,7 +43,7 @@ There is a [sample config](https://github.com/zhongbiaodev/py-mysql-elasticsearc
 Simply run command
 
 ```
-python3 main.py path/to/your/config.yaml
+es-sync path/to/your/config.yaml
 ```
 and the tool will dump your data as stream to sync, when dump is over, it will start to sync binlog.
 
@@ -54,7 +54,7 @@ Or if you  but want to load it from your own dumpfile. You should dump your tabl
 then
 
 ```
-python3 main.py path/to/your/config.yaml --fromfile
+es-sync path/to/your/config.yaml --fromfile
 ```
 to start sync, when xml sync is over, it will also start binlog sync.
 
