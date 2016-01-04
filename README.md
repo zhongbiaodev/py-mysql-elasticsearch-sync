@@ -65,4 +65,4 @@ We provide an upstart script to help you deploy this tool,since we use virtualen
 ## TODO
 - [ ] MultiIndex Supporting
 - [ ] Multi table Supporting
-- [ ] Python version compact
+- [ ] Python version compat
