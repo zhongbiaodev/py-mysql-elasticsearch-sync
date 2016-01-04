@@ -11,14 +11,14 @@ setup(
     author_email='windfarer@gmail.com',
     description='MySQL to Elasticsearch sync tool',
     install_requires=[
-        'mysql-replication',
-        'requests',
-        'pyyaml',
-        'lxml',
+        'mysql-replication>=0.8',
+        'requests>=2.9.1',
+        'PyYAML>=3.11',
+        'lxml>=3.5.0',
     ],
     entry_points={
         'console_scripts': [
-            'es-sync=:start',
+            'es-sync=src:start',
         ]
     },
     include_package_data=True
