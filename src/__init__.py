@@ -16,14 +16,16 @@ from pymysqlreplication.row_event import DeleteRowsEvent, UpdateRowsEvent, Write
 __version__ = '0.2.0'
 
 
-# For removing invalid characters in xml stream.
+# The magic spell for removing invalid characters in xml stream.
 REMOVE_INVALID_PIPE = r'tr -d "\00\01\02\03\04\05\06\07\10\13\14\16\17\20\21\22\23\24\25\26\27\30\31\32\33\34\35\36\37"'
 
 DEFAULT_BULKSIZE = 100
 
 
 class ElasticSync(object):
-
+    table_structure = {}
+    log_file = None
+    log_pos = None
     def __init__(self):
         try:
             self.config = yaml.load(open(sys.argv[1]))
@@ -41,18 +43,13 @@ class ElasticSync(object):
             port=self.config['elastic']['port'],
             index=self.config['elastic']['index'],
             type=self.config['elastic']['type']
-        )
-                                                                      # todo: supporting multi-index
+        )  # todo: supporting multi-index
+
         self.mapping = self.config.get('mapping')
         if self.mapping.get('_id'):
             self.id_key = self.mapping.pop('_id')
         else:
             self.id_key = None
-
-        self.table_structure = {}
-
-        self.log_file = None
-        self.log_pos = None
 
         record_path = self.config['binlog_sync']['record_file']
         if os.path.isfile(record_path):
@@ -79,7 +76,7 @@ class ElasticSync(object):
         signal.signal(signal.SIGINT, cleanup)
         signal.signal(signal.SIGTERM, cleanup)
 
-    def post_to_es(self, data):
+    def _post_to_es(self, data):
         """
         send post requests to es restful api
         """
@@ -89,9 +86,9 @@ class ElasticSync(object):
                 if list(item.values())[0].get('error'):
                     logging.error(item)
         else:
-            self.save_binlog_record()
+            self._save_binlog_record()
 
-    def bulker(self, bulk_size=DEFAULT_BULKSIZE):
+    def _bulker(self, bulk_size=DEFAULT_BULKSIZE):
         """
         Example:
             u = bulker()
@@ -112,19 +109,19 @@ class ElasticSync(object):
             # print(data)
             print('-'*10)
             if data:
-                self.post_to_es(data)
+                self._post_to_es(data)
 
-    def updater(self, data):
+    def _updater(self, data):
         """
         encapsulation of bulker
         """
-        u = self.bulker()
+        u = self._bulker()
         u.send(None)  # push the generator to first yield
         for item in data:
             u.send(item)
         u.send(None)  # tell the generator it's the end
 
-    def json_serializer(self, obj):
+    def _json_serializer(self, obj):
         """
         format the object which json not supported
         """
@@ -132,7 +129,7 @@ class ElasticSync(object):
             return obj.isoformat()
         raise TypeError('Type not serializable')
 
-    def processor(self, data):
+    def _processor(self, data):
         """
         The action must be one of the following:
         create
@@ -151,22 +148,22 @@ class ElasticSync(object):
                 action_content = {}
             meta = json.dumps({item['action']: action_content})
             if item['action'] == 'index':
-                body = json.dumps(item['doc'], default=self.json_serializer)
+                body = json.dumps(item['doc'], default=self._json_serializer)
                 rv = meta + '\n' + body
             elif item['action'] == 'update':
-                body = json.dumps({'doc': item['doc']}, default=self.json_serializer)
+                body = json.dumps({'doc': item['doc']}, default=self._json_serializer)
                 rv = meta + '\n' + body
             elif item['action'] == 'delete':
                 rv = meta + '\n'
             elif item['action'] == 'create':
-                body = json.dumps(item['doc'], default=self.json_serializer)
+                body = json.dumps(item['doc'], default=self._json_serializer)
                 rv = meta + '\n' + body
             else:
                 logging.error('unknown action type in doc')
                 raise TypeError('unknown action type in doc')
             yield rv
 
-    def mapper(self, data):
+    def _mapper(self, data):
         """
         mapping old key to new key
         """
@@ -177,12 +174,12 @@ class ElasticSync(object):
             # print(doc)
             yield item
 
-    def formatter(self, data):
+    def _formatter(self, data):
         """
         format every field from xml, according to parsed table structure
         """
         for item in data:
-            for field, serializer in table_structure.items():
+            for field, serializer in self.table_structure.items():
                 if item['doc'][field]:
                     try:
                         item['doc'][field] = serializer(item['doc'][field])
@@ -193,15 +190,13 @@ class ElasticSync(object):
             # print(item)
             yield item
 
-    def binlog_loader(self):
+    def _binlog_loader(self):
         """
         read row from binlog
         """
-        global log_file
-        global log_pos
-        if log_file and log_pos:
+        if self.log_file and self.log_pos:
             resume_stream = True
-            logging.info("Resume from binlog_file: {}  binlog_pos: {}".format(log_file, log_pos))
+            logging.info("Resume from binlog_file: {}  binlog_pos: {}".format(self.log_file, self.log_pos))
         else:
             resume_stream = False
 
@@ -211,11 +206,11 @@ class ElasticSync(object):
                                     only_tables=[self.config['mysql']['table']],
                                     resume_stream=resume_stream,
                                     blocking=True,
-                                    log_file=log_file,
-                                    log_pos=log_pos)
+                                    log_file=self.log_file,
+                                    log_pos=self.log_pos)
         for binlogevent in stream:
-            log_file = stream.log_file
-            log_pos = stream.log_pos
+            self.log_file = stream.log_file
+            self.log_pos = stream.log_pos
             for row in binlogevent.rows:
                 if isinstance(binlogevent, DeleteRowsEvent):
                     rv = {
@@ -239,11 +234,10 @@ class ElasticSync(object):
                 # print(rv)
         stream.close()
 
-    def parse_table_structure(self, data):
+    def _parse_table_structure(self, data):
         """
         parse the table structure
         """
-        global table_structure
         for item in data.iter():
             if item.tag == 'field':
                 field = item.attrib.get('Field')
@@ -263,9 +257,9 @@ class ElasticSync(object):
                     serializer = str
                 else:
                     serializer = str
-                table_structure[field] = serializer
+                self.table_structure[field] = serializer
 
-    def parse_and_remove(self, f, path):
+    def _parse_and_remove(self, f, path):
         """
         snippet from python cookbook, for parsing large xml file
         """
@@ -284,7 +278,7 @@ class ElasticSync(object):
                     yield elem
                     elem_stack[-2].remove(elem)
                 if tag_stack == ['database', 'table_structure']:  # dirty hack for getting the tables structure
-                    self.parse_table_structure(elem)
+                    self._parse_table_structure(elem)
                     elem_stack[-2].remove(elem)
                 try:
                     tag_stack.pop()
@@ -292,11 +286,11 @@ class ElasticSync(object):
                 except IndexError:
                     pass
 
-    def xml_parser(self, f_obj):
+    def _xml_parser(self, f_obj):
         """
         parse mysqldump XML streaming, convert every item to dict object. 'database/table_data/row'
         """
-        for row in self.parse_and_remove(f_obj, 'database/table_data/row'):
+        for row in self._parse_and_remove(f_obj, 'database/table_data/row'):
             doc = {}
             for field in row.iter(tag='field'):
                 k = field.attrib.get('name')
@@ -304,13 +298,13 @@ class ElasticSync(object):
                 doc[k] = v
             yield {'action': 'index', 'doc': doc}
 
-    def save_binlog_record(self):
-        if log_file and log_pos:
+    def _save_binlog_record(self):
+        if self.log_file and self.log_pos:
             with open(self.config['binlog_sync']['record_file'], 'w') as f:
-                logging.info("Sync binlog_file: {}  binlog_pos: {}".format(log_file, log_pos))
-                yaml.dump({"log_file": log_file, "log_pos": log_pos}, f)
+                logging.info("Sync binlog_file: {}  binlog_pos: {}".format(self.log_file, self.log_pos))
+                yaml.dump({"log_file": self.log_file, "log_pos": self.log_pos}, f)
 
-    def xml_dump_loader(self):
+    def _xml_dump_loader(self):
         mysqldump = subprocess.Popen(
             shlex.split(self.dump_cmd),
             stdout=subprocess.PIPE,
@@ -326,11 +320,11 @@ class ElasticSync(object):
 
         return remove_invalid_pipe.stdout
 
-    def xml_file_loader(self, filename):
+    def _xml_file_loader(self, filename):
         f = open(filename, 'rb')  # bytes required
         return f
 
-    def send_email(self, title, content):
+    def _send_email(self, title, content):
         """
         send notification email
         """
@@ -353,30 +347,31 @@ class ElasticSync(object):
         s.send_message(msg)
         s.quit()
 
-    def sync_from_stream(self):
+    def _sync_from_stream(self):
         logging.info("Start to dump from stream")
-        docs = reduce(lambda x, y: y(x), [self.xml_parser, 
-                                          self.formatter, 
-                                          self.mapper, 
-                                          self.processor], 
-                      self.xml_dump_loader())
-        self.updater(docs)
+        docs = reduce(lambda x, y: y(x), [self._xml_parser, 
+                                          self._formatter, 
+                                          self._mapper, 
+                                          self._processor], 
+                      self._xml_dump_loader())
+        self._updater(docs)
         logging.info("Dump success")
 
-    def sync_from_file(self):
+    def _sync_from_file(self):
         logging.info("Start to dump from xml file")
-        docs = reduce(lambda x, y: y(x), [self.xml_parser, 
-                                          self.formatter, 
-                                          self.mapper, 
-                                          self.processor],
-                      self.xml_file_loader(self.config['xml_file']['filename']))
-        self.updater(docs)
+        logging.info("Filename: {}".format(self.config['xml_file']['filename']))
+        docs = reduce(lambda x, y: y(x), [self._xml_parser, 
+                                          self._formatter, 
+                                          self._mapper, 
+                                          self._processor],
+                      self._xml_file_loader(self.config['xml_file']['filename']))
+        self._updater(docs)
         logging.info("Dump success")
 
-    def sync_from_binlog(self):
+    def _sync_from_binlog(self):
         logging.info("Start to sync binlog")
-        docs = reduce(lambda x, y: y(x), [self.mapper, self.processor], self.binlog_loader())
-        self.updater(docs)
+        docs = reduce(lambda x, y: y(x), [self._mapper, self._processor], self._binlog_loader())
+        self._updater(docs)
 
     def run(self):
         """
@@ -385,18 +380,22 @@ class ElasticSync(object):
         2. sync binlog
         """
         try:
-            if not log_file and not log_pos:
+            if not self.log_file and not self.log_pos:
                 if len(sys.argv) > 2 and sys.argv[2] == '--fromfile':
-                    self.sync_from_file()
+                    self._sync_from_file()
                 else:
-                    self.sync_from_stream()
-            self.sync_from_binlog()
+                    self._sync_from_stream()
+            self._sync_from_binlog()
         except Exception:
             import traceback
             logging.error(traceback.format_exc())
-            self.send_email('es sync error', traceback.format_exc())
+            self._send_email('es sync error', traceback.format_exc())
             raise
 
 
+def start():
+    instance = ElasticSync()
+    instance.run()
+
 if __name__ == '__main__':
-    pass
+    start()

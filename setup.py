@@ -18,7 +18,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'es-sync=:run',
+            'es-sync=:start',
         ]
     },
     include_package_data=True
