@@ -8,7 +8,7 @@ Also, during the binlog syncing, this tool will save the binlog sync position, s
 ## Installation
 By following these steps.
 ##### 1. Python3
-This tool is written in Python3.4, so you must install Python3.4 first, by following [this guide](https://docs.python.org/3.4/using/index.html)
+This tool is written in Python3.4, so you must install Python3.4 or above first, by following [this guide](https://docs.python.org/3.4/using/index.html)
 ##### 2. ibxml2 and libxslt
 Also, this tool depends on python lxml package, so that you should install  the lxml's dependecies correctly, the libxml2 and libxslt are required.
 
@@ -30,14 +30,10 @@ And then, mysqldump is required.
 
 
 ##### 4. this tool
-Then clone this repo and install dependencies
+Then install this tool
 
 ```
-git clone https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync.git 
-
-cd py-mysql-elasticsearch-sync
-
-pip3 install -r requirements.txt
+pip3 install py-mysql-elasticsearch-sync
 ```
 
 ## Configuration
@@ -67,6 +63,6 @@ We provide an upstart script to help you deploy this tool,since we use virtualen
 
 
 ## TODO
-- [ ] Packaging
 - [ ] MultiIndex Supporting
 - [ ] Multi table Supporting
+- [ ] Python version compact
