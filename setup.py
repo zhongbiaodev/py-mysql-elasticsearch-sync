@@ -15,6 +15,7 @@ setup(
         'requests>=2.9.1',
         'PyYAML>=3.11',
         'lxml>=3.5.0',
+        'future>=0.15.2'
     ],
     entry_points={
         'console_scripts': [

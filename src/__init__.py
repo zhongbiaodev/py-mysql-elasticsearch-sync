@@ -1,4 +1,10 @@
-import os.path
+from __future__ import print_function, unicode_literals
+from future.builtins import str
+try:
+    from subprocess import DEVNULL  # PY3
+except ImportError:
+    import os
+    DEVNULL = open(os.devnull, 'wb')
 import sys
 import yaml
 import signal
@@ -308,14 +314,14 @@ class ElasticSync(object):
         mysqldump = subprocess.Popen(
             shlex.split(self.dump_cmd),
             stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
+            stderr=DEVNULL,
             close_fds=True)
 
         remove_invalid_pipe = subprocess.Popen(
             shlex.split(REMOVE_INVALID_PIPE),
             stdin=mysqldump.stdout,
             stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
+            stderr=DEVNULL,
             close_fds=True)
 
         return remove_invalid_pipe.stdout

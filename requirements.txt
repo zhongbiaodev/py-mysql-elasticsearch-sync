@@ -2,4 +2,4 @@ mysql-replication
 requests
 pyyaml
 lxml
-
+future #for py2 compat
