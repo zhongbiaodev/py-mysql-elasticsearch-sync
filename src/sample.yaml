@@ -15,6 +15,10 @@ elastic:
   index: article
   type: article
 
+# path to your own xml file, if you want to initialize dump from xml file
+xml_file:
+  filename: a.xml
+
 # If you want to map your column, put the column name as the value, and es field name as the key,
 # Particularly , if you set _id as follows, it will use myid column as the index doc's id, or ES will generate an id as default
 mapping:
