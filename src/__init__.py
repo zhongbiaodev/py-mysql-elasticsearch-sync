@@ -1,12 +1,19 @@
 from __future__ import print_function, unicode_literals
 from future.builtins import str, range
-try:
-    from subprocess import DEVNULL  # PY3
-except ImportError:
+import sys
+PY2 = sys.version_info[0] == 2
+
+if PY2:
     import os
     DEVNULL = open(os.devnull, 'wb')
+else:
+    from subprocess import DEVNULL
+def encode_in_py2(s):
+    if PY2:
+        return s.encode('utf-8')
+    return s
+
 import os.path
-import sys
 import yaml
 import signal
 import requests
@@ -20,7 +27,7 @@ from functools import reduce
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.row_event import DeleteRowsEvent, UpdateRowsEvent, WriteRowsEvent
 
-__version__ = '0.2.1'
+__version__ = '0.3.0'
 
 
 # The magic spell for removing invalid characters in xml stream.
@@ -44,7 +51,9 @@ class ElasticSync(object):
         self.dump_cmd = 'mysqldump -h {host} -P {port} -u {user} --password={password} {db} {table} ' \
                         '--default-character-set=utf8 -X'.format(**self.config['mysql'])
 
-        self.binlog_conf = {key: self.config['mysql'][key] for key in ['host', 'port', 'user', 'password', 'db']}
+        self.binlog_conf = dict(
+            [(key, self.config['mysql'][key]) for key in ['host', 'port', 'user', 'password', 'db']]
+        )
 
         self.endpoint = 'http://{host}:{port}/{index}/{type}/_bulk'.format(
             host=self.config['elastic']['host'],
@@ -192,8 +201,9 @@ class ElasticSync(object):
                     try:
                         item['doc'][field] = serializer(item['doc'][field])
                     except ValueError as e:
-                        self.logger.error("Error occurred during format, ErrorMessage:{}, ErrorItem:{}".format(str(e),
-                                                                                                          str(item)))
+                        self.logger.error("Error occurred during format, ErrorMessage:{msg}, ErrorItem:{item}".format(
+                            msg=str(e),
+                            item=str(item)))
                         item['doc'][field] = None
             # print(item)
             yield item
@@ -204,7 +214,8 @@ class ElasticSync(object):
         """
         if self.log_file and self.log_pos:
             resume_stream = True
-            logging.info("Resume from binlog_file: {}  binlog_pos: {}".format(self.log_file, self.log_pos))
+            logging.info("Resume from binlog_file: {file}  binlog_pos: {pos}".format(file=self.log_file,
+                                                                                     pos=self.log_pos))
         else:
             resume_stream = False
 
@@ -309,18 +320,21 @@ class ElasticSync(object):
     def _save_binlog_record(self):
         if self.log_file and self.log_pos:
             with open(self.config['binlog_sync']['record_file'], 'w') as f:
-                logging.info("Sync binlog_file: {}  binlog_pos: {}".format(self.log_file, self.log_pos))
-                yaml.dump({"log_file": self.log_file, "log_pos": self.log_pos}, f)
+                logging.info("Sync binlog_file: {file}  binlog_pos: {pos}".format(
+                    file=self.log_file,
+                    pos=self.log_pos)
+                )
+                yaml.safe_dump({"log_file": self.log_file, "log_pos": self.log_pos}, f, default_flow_style=False)
 
     def _xml_dump_loader(self):
         mysqldump = subprocess.Popen(
-            shlex.split(self.dump_cmd),
+            shlex.split(encode_in_py2(self.dump_cmd)),
             stdout=subprocess.PIPE,
             stderr=DEVNULL,
             close_fds=True)
 
         remove_invalid_pipe = subprocess.Popen(
-            shlex.split(REMOVE_INVALID_PIPE),
+            shlex.split(encode_in_py2(REMOVE_INVALID_PIPE)),
             stdin=mysqldump.stdout,
             stdout=subprocess.PIPE,
             stderr=DEVNULL,
