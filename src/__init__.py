@@ -27,7 +27,7 @@ from functools import reduce
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.row_event import DeleteRowsEvent, UpdateRowsEvent, WriteRowsEvent
 
-__version__ = '0.3.0'
+__version__ = '0.3.2'
 
 
 # The magic spell for removing invalid characters in xml stream.
@@ -62,7 +62,7 @@ class ElasticSync(object):
             type=self.config['elastic']['type']
         )  # todo: supporting multi-index
 
-        self.mapping = self.config.get('mapping')
+        self.mapping = self.config.get('mapping') or {}
         if self.mapping.get('_id'):
             self.id_key = self.mapping.pop('_id')
         else:
@@ -185,9 +185,10 @@ class ElasticSync(object):
         mapping old key to new key
         """
         for item in data:
-            for k, v in self.mapping.items():
-                item['doc'][k] = item['doc'][v]
-                del item['doc'][v]
+            if self.mapping:
+                for k, v in self.mapping.items():
+                    item['doc'][k] = item['doc'][v]
+                    del item['doc'][v]
             # print(doc)
             yield item
 
