@@ -5,6 +5,7 @@ try:
 except ImportError:
     import os
     DEVNULL = open(os.devnull, 'wb')
+import os.path
 import sys
 import yaml
 import signal
@@ -350,13 +351,13 @@ class ElasticSync(object):
         s.connect(self.config['email']['from']['host'])
         s.login(user=self.config['email']['from']['username'],
                 password=self.config['email']['from']['password'])
-        s.send_message(msg)
+        s.sendmail(msg['From'], msg['To'], msg=msg.as_string())
         s.quit()
 
     def _sync_from_stream(self):
         logging.info("Start to dump from stream")
         docs = reduce(lambda x, y: y(x), [self._xml_parser, 
-                                          self._formatter, 
+                                          self._formatter,
                                           self._mapper, 
                                           self._processor], 
                       self._xml_dump_loader())
