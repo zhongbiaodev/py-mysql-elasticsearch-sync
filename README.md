@@ -36,7 +36,7 @@ pip install py-mysql-elasticsearch-sync
 ```
 
 ## Configuration
-There is a [sample config](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/sample.yaml) file in repo, you can start by editing it.
+There is a [sample config](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/src/sample.yaml) file in repo, you can start by editing it.
 
 ## Running
 Simply run command
