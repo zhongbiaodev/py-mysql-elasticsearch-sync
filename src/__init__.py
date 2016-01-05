@@ -1,5 +1,5 @@
 from __future__ import print_function, unicode_literals
-from future.builtins import str
+from future.builtins import str, range
 try:
     from subprocess import DEVNULL  # PY3
 except ImportError:
@@ -33,6 +33,7 @@ class ElasticSync(object):
     table_structure = {}
     log_file = None
     log_pos = None
+
     def __init__(self):
         try:
             self.config = yaml.load(open(sys.argv[1]))
