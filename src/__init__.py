@@ -253,6 +253,7 @@ class ElasticSync(object):
                 yield rv
                 # print(rv)
         stream.close()
+        raise IOError('mysql connection closed')
 
     def _parse_table_structure(self, data):
         """
