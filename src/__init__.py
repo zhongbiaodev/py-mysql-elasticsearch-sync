@@ -34,12 +34,17 @@ __version__ = '0.3.2'
 REMOVE_INVALID_PIPE = r'tr -d "\00\01\02\03\04\05\06\07\10\13\14\16\17\20\21\22\23\24\25\26\27\30\31\32\33\34\35\36\37"'
 
 DEFAULT_BULKSIZE = 100
-
+DEFAULT_BINLOG_BULKSIZE = 1
 
 class ElasticSync(object):
     table_structure = {}
     log_file = None
     log_pos = None
+
+    @property
+    def is_binlog_sync(self):
+        rv = bool(self.log_file and self.log_pos)
+        return rv
 
     def __init__(self):
         try:
@@ -75,7 +80,9 @@ class ElasticSync(object):
                 self.log_file = record.get('log_file')
                 self.log_pos = record.get('log_pos')
 
-        self.bulk_size = self.config.get('elastic').get('bulk_size')
+        self.bulk_size = self.config.get('elastic').get('bulk_size') or DEFAULT_BULKSIZE
+        self.binlog_bulk_size = self.config.get('elastic').get('binlog_bulk_size') or DEFAULT_BINLOG_BULKSIZE
+
         self._init_logging()
 
     def _init_logging(self):
@@ -105,7 +112,7 @@ class ElasticSync(object):
         else:
             self._save_binlog_record()
 
-    def _bulker(self, bulk_size=DEFAULT_BULKSIZE):
+    def _bulker(self, bulk_size):
         """
         Example:
             u = bulker()
@@ -132,7 +139,11 @@ class ElasticSync(object):
         """
         encapsulation of bulker
         """
-        u = self._bulker()
+        if self.is_binlog_sync:
+                u = self._bulker(bulk_size=self.binlog_bulk_size)
+        else:
+                u = self._bulker(bulk_size=self.bulk_size)
+
         u.send(None)  # push the generator to first yield
         for item in data:
             u.send(item)
@@ -320,7 +331,7 @@ class ElasticSync(object):
             yield {'action': 'index', 'doc': doc}
 
     def _save_binlog_record(self):
-        if self.log_file and self.log_pos:
+        if self.is_binlog_sync:
             with open(self.config['binlog_sync']['record_file'], 'w') as f:
                 logging.info("Sync binlog_file: {file}  binlog_pos: {pos}".format(
                     file=self.log_file,
@@ -404,7 +415,7 @@ class ElasticSync(object):
         2. sync binlog
         """
         try:
-            if not self.log_file and not self.log_pos:
+            if not self.is_binlog_sync:
                 if len(sys.argv) > 2 and sys.argv[2] == '--fromfile':
                     self._sync_from_file()
                 else:
