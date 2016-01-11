@@ -1,6 +1,8 @@
 # py-mysql-elasticsearch-sync
 Simple and fast MySQL to Elasticsearch sync tool, written in Python.
 
+[中文文档](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/README_CN.md)
+
 ## Introduction
 This tool helps you to initialize MySQL dump table to Elasticsearch by parsing mysqldump, then incremental sync MySQL table to Elasticsearch by processing MySQL Binlog.
 Also, during the binlog syncing, this tool will save the binlog sync position, so that it is easy to recover after this tool being shutdown for any reason.
@@ -9,7 +11,7 @@ Also, during the binlog syncing, this tool will save the binlog sync position, s
 By following these steps.
 
 ##### 1. ibxml2 and libxslt
-Also, this tool depends on python lxml package, so that you should install  the lxml's dependecies correctly, the libxml2 and libxslt are required.
+This tool depends on python lxml package, so that you should install  the lxml's dependecies correctly, the libxml2 and libxslt are required.
 
 For example, in CentOS:
 
@@ -25,7 +27,7 @@ sudo apt-get install libxml2-dev libxslt-dev python-dev
 
 See [lxml Installation](http://lxml.de/installation.html) for more infomation.
 ##### 2. mysqldump
-And then, mysqldump is required.(and enable binlog)
+And then, mysqldump is required in the machine where this tool will be run on it.(and the mysql server must enable binlog)
 
 
 ##### 3. this tool
@@ -58,7 +60,7 @@ es-sync path/to/your/config.yaml --fromfile
 to start sync, when xml sync is over, it will also start binlog sync.
 
 ## Deployment
-We provide an upstart script to help you deploy this tool,since we use virtualenv for requirements isolation, you must edit it for your own condition, besides, you can deploy it in your own way.
+We provide an upstart script to help you deploy this tool, you can edit it for your own condition, besides, you can deploy it in your own way.
 
 ## TODO
 - [ ] MultiIndex Supporting

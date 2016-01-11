@@ -36,6 +36,7 @@ REMOVE_INVALID_PIPE = r'tr -d "\00\01\02\03\04\05\06\07\10\13\14\16\17\20\21\22\
 DEFAULT_BULKSIZE = 100
 DEFAULT_BINLOG_BULKSIZE = 1
 
+
 class ElasticSync(object):
     table_structure = {}
     log_file = None
