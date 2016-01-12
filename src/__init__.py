@@ -225,7 +225,7 @@ class ElasticSync(object):
         """
         read row from binlog
         """
-        if self.log_file and self.log_pos:
+        if self.is_binlog_sync:
             resume_stream = True
             logging.info("Resume from binlog_file: {file}  binlog_pos: {pos}".format(file=self.log_file,
                                                                                      pos=self.log_pos))
