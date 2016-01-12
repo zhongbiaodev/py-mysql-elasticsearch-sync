@@ -27,7 +27,7 @@ from functools import reduce
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.row_event import DeleteRowsEvent, UpdateRowsEvent, WriteRowsEvent
 
-__version__ = '0.3.3'
+__version__ = '0.3.3.1'
 
 
 # The magic spell for removing invalid characters in xml stream.
