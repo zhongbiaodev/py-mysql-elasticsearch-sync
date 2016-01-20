@@ -1,5 +1,6 @@
-mysql-replication
-requests
-pyyaml
-lxml
-future #for py2 compat
+PyMySQL==0.6.7
+mysql-replication==0.8
+requests==2.9.1
+PyYAML==3.11
+lxml==3.5.0
+future==0.15.2 #for py2 compat
