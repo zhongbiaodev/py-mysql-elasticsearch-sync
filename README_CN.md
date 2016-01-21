@@ -35,7 +35,7 @@ pip install py-mysql-elasticsearch-sync
 ```
 
 ## 配置
-你可以通过修改[配置文件示例](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/src/sample.yaml)来编写自己的配置文件
+你可以通过修改[配置文件示例](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/es_sync/sample.yaml)来编写自己的配置文件
 
 ## 运行
 运行命令
@@ -60,7 +60,7 @@ es-sync path/to/your/config.yaml --fromfile
 启动从xml导入，当从xml导入完毕后，它会开始同步binlog
 
 ## 服务管理
-我们写了一个[upstart脚本]来管理本工具的运行，你也可以用你自己的方式进行部署运行
+我们写了一个[upstart脚本](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/upstart.conf)来管理本工具的运行，你也可以用你自己的方式进行部署运行
 
 ## TODO
 - [ ] 多索引支持

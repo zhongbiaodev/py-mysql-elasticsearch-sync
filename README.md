@@ -38,7 +38,7 @@ pip install py-mysql-elasticsearch-sync
 ```
 
 ## Configuration
-There is a [sample config](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/src/sample.yaml) file in repo, you can start by editing it.
+There is a [sample config](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/es_sync/sample.yaml) file in repo, you can start by editing it.
 
 ## Running
 Simply run command
@@ -60,7 +60,7 @@ es-sync path/to/your/config.yaml --fromfile
 to start sync, when xml sync is over, it will also start binlog sync.
 
 ## Deployment
-We provide an upstart script to help you deploy this tool, you can edit it for your own condition, besides, you can deploy it in your own way.
+We provide an [upstart script]((https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/upstart.conf)) to help you deploy this tool, you can edit it for your own condition, besides, you can deploy it in your own way.
 
 ## TODO
 - [ ] MultiIndex Supporting
