@@ -24,7 +24,7 @@ import subprocess
 import json
 import logging
 import shlex
-from datetime import datetime
+import datetime
 from lxml.etree import iterparse
 from functools import reduce
 from pymysqlreplication import BinLogStreamReader
@@ -157,7 +157,7 @@ class ElasticSync(object):
         """
         format the object which json not supported
         """
-        if isinstance(obj, datetime):
+        if isinstance(obj, datetime.datetime) or isinstance(obj, datetime.date):
             return obj.isoformat()
         raise TypeError('Type not serializable')
 
