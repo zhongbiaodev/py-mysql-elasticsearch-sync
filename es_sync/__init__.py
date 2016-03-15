@@ -285,9 +285,9 @@ class ElasticSync(object):
                     serializer = float
                 elif 'datetime' in type:
                     if '(' in type:
-                        serializer = lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f')
+                        serializer = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f')
                     else:
-                        serializer = lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+                        serializer = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
                 elif 'char' in type:
                     serializer = str
                 elif 'text' in type:
