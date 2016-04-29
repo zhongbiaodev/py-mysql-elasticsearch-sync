@@ -57,3 +57,10 @@ docs/_build/
 target/
 
 *.yaml
+
+# virtualenv
+venv/
+ENV/
+
+# Pycharm settings
+*.idea/
