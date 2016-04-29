@@ -29,6 +29,7 @@ from lxml.etree import iterparse
 from functools import reduce
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.row_event import DeleteRowsEvent, UpdateRowsEvent, WriteRowsEvent
+from pymysqlreplication.event import RotateEvent
 
 __version__ = '0.3.4'
 
@@ -238,7 +239,7 @@ class ElasticSync(object):
 
         stream = BinLogStreamReader(connection_settings=self.binlog_conf,
                                     server_id=self.config['mysql']['server_id'],
-                                    only_events=[DeleteRowsEvent, WriteRowsEvent, UpdateRowsEvent],
+                                    only_events=[DeleteRowsEvent, WriteRowsEvent, UpdateRowsEvent, RotateEvent],
                                     only_tables=[self.config['mysql']['table']],
                                     resume_stream=resume_stream,
                                     blocking=True,
@@ -263,6 +264,10 @@ class ElasticSync(object):
                         'action': 'index',
                         'doc': row['values']
                     }
+                # RotateEvent to update binlog record when no related table changed
+                elif isinstance(binlogevent, RotateEvent):
+                    self._save_binlog_record()
+                    continue
                 else:
                     logging.error('unknown action type in binlog')
                     raise TypeError('unknown action type in binlog')
