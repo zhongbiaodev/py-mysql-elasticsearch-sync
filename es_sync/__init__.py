@@ -145,9 +145,9 @@ class ElasticSync(object):
         encapsulation of bulker
         """
         if self.is_binlog_sync:
-                u = self._bulker(bulk_size=self.binlog_bulk_size)
+            u = self._bulker(bulk_size=self.binlog_bulk_size)
         else:
-                u = self._bulker(bulk_size=self.bulk_size)
+            u = self._bulker(bulk_size=self.bulk_size)
 
         u.send(None)  # push the generator to first yield
         for item in data:
@@ -248,6 +248,11 @@ class ElasticSync(object):
         for binlogevent in stream:
             self.log_file = stream.log_file
             self.log_pos = stream.log_pos
+
+            # RotateEvent to update binlog record when no related table changed
+            if isinstance(binlogevent, RotateEvent):
+                self._save_binlog_record()
+                continue
             for row in binlogevent.rows:
                 if isinstance(binlogevent, DeleteRowsEvent):
                     rv = {
@@ -264,10 +269,6 @@ class ElasticSync(object):
                         'action': 'index',
                         'doc': row['values']
                     }
-                # RotateEvent to update binlog record when no related table changed
-                elif isinstance(binlogevent, RotateEvent):
-                    self._save_binlog_record()
-                    continue
                 else:
                     logging.error('unknown action type in binlog')
                     raise TypeError('unknown action type in binlog')
