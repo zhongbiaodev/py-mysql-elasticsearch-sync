@@ -62,6 +62,12 @@ es-sync path/to/your/config.yaml --fromfile
 ## 服务管理
 我们写了一个[upstart脚本](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/upstart.conf)来管理本工具的运行，你也可以用你自己的方式进行部署运行
 
+## 多表支持
+你可以在config文件中配置tables以支持多表，默认tables中第一张表为主表，其余表为从表。
+
+主表和从表主键必须相同，均为_id字段。
+
+当同时设置table和tables时，table优先级较高。
+
 ## TODO
 - [ ] 多索引支持
-- [ ] 多表支持

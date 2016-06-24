@@ -21,7 +21,7 @@ import yaml
 import signal
 import requests
 import subprocess
-import json
+import ujson
 import logging
 import shlex
 import datetime
@@ -58,8 +58,20 @@ class ElasticSync(object):
             print('Error: not specify config file')
             exit(1)
 
-        self.dump_cmd = 'mysqldump -h {host} -P {port} -u {user} --password={password} {db} {table} ' \
-                        '--default-character-set=utf8 -X'.format(**self.config['mysql'])
+        mysql = self.config.get('mysql')
+        if mysql.get('table'):
+            self.tables = [mysql.get('table')]
+            self.dump_cmd = 'mysqldump -h {host} -P {port} -u {user} --password={password} {db} {table} ' \
+                        '--default-character-set=utf8 -X --opt --quick'.format(**mysql)
+        elif mysql.get('tables'):
+            self.tables = mysql.get('tables')
+            mysql.update({
+                'tables': ' '.join(mysql.get('tables'))
+            })
+            self.dump_cmd = 'mysqldump -h {host} -P {port} -u {user} --password={password} --database {db} --tables {tables} ' \
+                        '--default-character-set=utf8 -X --opt --quick'.format(**mysql)
+        self.master = self.tables[0]  # use the first table as master
+        self.current_table = None
 
         self.binlog_conf = dict(
             [(key, self.config['mysql'][key]) for key in ['host', 'port', 'user', 'password', 'db']]
@@ -77,6 +89,8 @@ class ElasticSync(object):
             self.id_key = self.mapping.pop('_id')
         else:
             self.id_key = None
+
+        self.ignoring = self.config.get('ignoring') or []
 
         record_path = self.config['binlog_sync']['record_file']
         if os.path.isfile(record_path):
@@ -179,17 +193,22 @@ class ElasticSync(object):
                 action_content = {'_id': item['doc'][self.id_key]}
             else:
                 action_content = {}
-            meta = json.dumps({item['action']: action_content})
+            for field in self.ignoring:
+                try:
+                    item['doc'].pop(field)
+                except KeyError:
+                    pass
+            meta = ujson.dumps({item['action']: action_content})
             if item['action'] == 'index':
-                body = json.dumps(item['doc'], default=self._json_serializer)
+                body = ujson.dumps(item['doc'])
                 rv = meta + '\n' + body
             elif item['action'] == 'update':
-                body = json.dumps({'doc': item['doc']}, default=self._json_serializer)
+                body = ujson.dumps({'doc': item['doc']})
                 rv = meta + '\n' + body
             elif item['action'] == 'delete':
                 rv = meta + '\n'
             elif item['action'] == 'create':
-                body = json.dumps(item['doc'], default=self._json_serializer)
+                body = ujson.dumps(item['doc'])
                 rv = meta + '\n' + body
             else:
                 logging.error('unknown action type in doc')
@@ -214,7 +233,7 @@ class ElasticSync(object):
         """
         for item in data:
             for field, serializer in self.table_structure.items():
-                if item['doc'][field]:
+                if field in item['doc'] and item['doc'][field]:
                     try:
                         item['doc'][field] = serializer(item['doc'][field])
                     except ValueError as e:
@@ -240,7 +259,7 @@ class ElasticSync(object):
         stream = BinLogStreamReader(connection_settings=self.binlog_conf,
                                     server_id=self.config['mysql']['server_id'],
                                     only_events=[DeleteRowsEvent, WriteRowsEvent, UpdateRowsEvent, RotateEvent],
-                                    only_tables=[self.config['mysql']['table']],
+                                    only_tables=self.tables,
                                     resume_stream=resume_stream,
                                     blocking=True,
                                     log_file=self.log_file,
@@ -255,20 +274,32 @@ class ElasticSync(object):
                 continue
             for row in binlogevent.rows:
                 if isinstance(binlogevent, DeleteRowsEvent):
-                    rv = {
-                        'action': 'delete',
-                        'doc': row['values']
-                    }
+                    if binlogevent.table == self.master:
+                        rv = {
+                            'action': 'delete',
+                            'doc': row['values']
+                        }
+                    else:
+                        rv = {
+                            'action': 'update',
+                            'doc': {k: row['values'][k] if self.id_key and self.id_key == k else None for k in row['values']}
+                        }
                 elif isinstance(binlogevent, UpdateRowsEvent):
                     rv = {
                         'action': 'update',
                         'doc': row['after_values']
                     }
                 elif isinstance(binlogevent, WriteRowsEvent):
-                    rv = {
-                        'action': 'index',
-                        'doc': row['values']
-                    }
+                    if binlogevent.table == self.master:
+                        rv = {
+                                'action': 'create',
+                                'doc': row['values']
+                            }
+                    else:
+                        rv = {
+                                'action': 'update',
+                                'doc': row['values']
+                            }
                 else:
                     logging.error('unknown action type in binlog')
                     raise TypeError('unknown action type in binlog')
@@ -291,9 +322,9 @@ class ElasticSync(object):
                     serializer = float
                 elif 'datetime' in type:
                     if '(' in type:
-                        serializer = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f')
+                        serializer = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f').isoformat()
                     else:
-                        serializer = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+                        serializer = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').isoformat()
                 elif 'char' in type:
                     serializer = str
                 elif 'text' in type:
@@ -314,9 +345,13 @@ class ElasticSync(object):
         elem_stack = []
         for event, elem in doc:
             if event == 'start':
+                if elem.tag == 'table_data':
+                    self.current_table = elem.attrib['name']
                 tag_stack.append(elem.tag)
                 elem_stack.append(elem)
             elif event == 'end':
+                if tag_stack == ['database', 'table_data']:
+                    self.current_table = None
                 if tag_stack == path_parts:
                     yield elem
                     elem_stack[-2].remove(elem)
@@ -341,7 +376,10 @@ class ElasticSync(object):
                 k = field.attrib.get('name')
                 v = field.text
                 doc[k] = v
-            yield {'action': 'index', 'doc': doc}
+            if not self.current_table or self.current_table == self.master:
+                yield {'action': 'create', 'doc': doc}
+            else:
+                yield {'action': 'update', 'doc': doc}
 
     def _save_binlog_record(self):
         if self.is_binlog_sync:
@@ -373,7 +411,14 @@ class ElasticSync(object):
 
     def _xml_file_loader(self, filename):
         f = open(filename, 'rb')  # bytes required
-        return f
+
+        remove_invalid_pipe = subprocess.Popen(
+            shlex.split(encode_in_py2(REMOVE_INVALID_PIPE)),
+            stdin=f,
+            stdout=subprocess.PIPE,
+            stderr=DEVNULL,
+            close_fds=True)
+        return remove_invalid_pipe.stdout
 
     def _send_email(self, title, content):
         """

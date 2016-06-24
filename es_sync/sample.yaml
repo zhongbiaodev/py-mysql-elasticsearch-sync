@@ -6,6 +6,8 @@ mysql:
   password: bar
   db: mydb
   table: mytable
+  tables: # support multi-table here, you can set tables instead of table and the first one will be set to master as default
+    - table1
   server_id: 1  # this should be unique
 
 elastic:
@@ -25,6 +27,10 @@ xml_file:
 mapping:
   _id: myid
   es_field_name: mysql_column_name
+
+# You can set ignoring fields here, and these fields will not be post to ES.
+ignoring:
+  - ignoring_field
 
 # The log file's path
 logging:
