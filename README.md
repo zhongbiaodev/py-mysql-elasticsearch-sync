@@ -62,7 +62,7 @@ to start sync, when xml sync is over, it will also start binlog sync.
 ## Deployment
 We provide an [upstart script]((https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/upstart.conf)) to help you deploy this tool, you can edit it for your own condition, besides, you can deploy it in your own way.
 
-## 多表支持
+## MultiTable Supporting
 Now Multi-table is supported through setting tables in config file, the first table is master as default and the others are slave.
 
 Master table and slave tables must use the same primary key, which is defined via _id.
