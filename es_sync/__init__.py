@@ -70,6 +70,9 @@ class ElasticSync(object):
             })
             self.dump_cmd = 'mysqldump -h {host} -P {port} -u {user} --password={password} --database {db} --tables {tables} ' \
                         '--default-character-set=utf8 -X --opt --quick'.format(**mysql)
+        else:
+            print('Error: must specify either table or tables')
+            exit(1)
         self.master = self.tables[0]  # use the first table as master
         self.current_table = None
 
