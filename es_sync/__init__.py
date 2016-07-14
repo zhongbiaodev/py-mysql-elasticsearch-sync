@@ -21,7 +21,7 @@ import yaml
 import signal
 import requests
 import subprocess
-import ujson
+import json
 import logging
 import shlex
 import datetime
@@ -198,17 +198,17 @@ class ElasticSync(object):
                     item['doc'].pop(field)
                 except KeyError:
                     pass
-            meta = ujson.dumps({item['action']: action_content})
+            meta = json.dumps({item['action']: action_content})
             if item['action'] == 'index':
-                body = ujson.dumps(item['doc'])
+                body = json.dumps(item['doc'], default=self._json_serializer)
                 rv = meta + '\n' + body
             elif item['action'] == 'update':
-                body = ujson.dumps({'doc': item['doc']})
+                body = json.dumps({'doc': item['doc']}, default=self._json_serializer)
                 rv = meta + '\n' + body
             elif item['action'] == 'delete':
                 rv = meta + '\n'
             elif item['action'] == 'create':
-                body = ujson.dumps(item['doc'])
+                body = json.dumps(item['doc'], default=self._json_serializer)
                 rv = meta + '\n' + body
             else:
                 logging.error('unknown action type in doc')
@@ -322,9 +322,9 @@ class ElasticSync(object):
                     serializer = float
                 elif 'datetime' in type:
                     if '(' in type:
-                        serializer = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f').isoformat()
+                        serializer = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f')
                     else:
-                        serializer = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').isoformat()
+                        serializer = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
                 elif 'char' in type:
                     serializer = str
                 elif 'text' in type:
