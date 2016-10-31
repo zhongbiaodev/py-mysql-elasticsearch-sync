@@ -25,6 +25,7 @@ import json
 import logging
 import shlex
 import datetime
+import decimal
 from lxml.etree import iterparse
 from functools import reduce
 from pymysqlreplication import BinLogStreamReader
@@ -177,7 +178,9 @@ class ElasticSync(object):
         """
         if isinstance(obj, datetime.datetime) or isinstance(obj, datetime.date):
             return obj.isoformat()
-        raise TypeError('Type not serializable')
+        elif isinstance(obj, decimal.Decimal):
+            return str(obj)
+        raise TypeError('Type not serializable for obj {obj}'.format(obj=obj))
 
     def _processor(self, data):
         """
@@ -225,8 +228,11 @@ class ElasticSync(object):
         for item in data:
             if self.mapping:
                 for k, v in self.mapping.items():
-                    item['doc'][k] = item['doc'][v]
-                    del item['doc'][v]
+                    try:
+                        item['doc'][k] = item['doc'][v]
+                        del item['doc'][v]
+                    except KeyError:
+                        continue
             # print(doc)
             yield item
 
@@ -244,6 +250,8 @@ class ElasticSync(object):
                             "Error occurred during format, ErrorMessage:{msg}, ErrorItem:{item}".format(
                             msg=str(e),
                             item=str(item)))
+                        item['doc'][field] = None
+                    except TypeError as e:
                         item['doc'][field] = None
             # print(item)
             yield item
