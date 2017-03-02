@@ -30,7 +30,7 @@ from lxml.etree import iterparse
 from functools import reduce
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.row_event import DeleteRowsEvent, UpdateRowsEvent, WriteRowsEvent
-from pymysqlreplication.event import RotateEvent
+from pymysqlreplication.event import RotateEvent, XidEvent
 
 __version__ = '0.4.1'
 
@@ -107,11 +107,12 @@ class ElasticSync(object):
         self.binlog_bulk_size = self.config.get('elastic').get('binlog_bulk_size') or DEFAULT_BINLOG_BULKSIZE
 
         self._init_logging()
+        self.flag = False
 
     def _init_logging(self):
         logging.basicConfig(filename=self.config['logging']['file'],
                             level=logging.INFO,
-                            format='[%(levelname)s] %(asctime)s %(message)s')
+                            format='[%(levelname)s] - %(filename)s[line:%(lineno)d] - %(asctime)s %(message)s')
         self.logger = logging.getLogger(__name__)
         logging.getLogger("requests").setLevel(logging.WARNING)  # disable requests info logging
 
@@ -153,10 +154,14 @@ class ElasticSync(object):
                     data = data + item + "\n"
                 else:
                     break
+                if self.flag:
+                    break
             # print(data)
             print('-'*10)
             if data:
                 self._post_to_es(data)
+
+            self.flag = False
 
     def _updater(self, data):
         """
@@ -269,7 +274,7 @@ class ElasticSync(object):
 
         stream = BinLogStreamReader(connection_settings=self.binlog_conf,
                                     server_id=self.config['mysql']['server_id'],
-                                    only_events=[DeleteRowsEvent, WriteRowsEvent, UpdateRowsEvent, RotateEvent],
+                                    only_events=[DeleteRowsEvent, WriteRowsEvent, UpdateRowsEvent, RotateEvent, XidEvent],
                                     only_tables=self.tables,
                                     resume_stream=resume_stream,
                                     blocking=True,
@@ -283,6 +288,12 @@ class ElasticSync(object):
             if isinstance(binlogevent, RotateEvent):
                 self._save_binlog_record()
                 continue
+
+            if isinstance(binlogevent, XidEvent):  # event_type == 16
+                logging.info('-----XidEvent')
+                self.flag = True
+                continue
+
             for row in binlogevent.rows:
                 if isinstance(binlogevent, DeleteRowsEvent):
                     if binlogevent.table == self.master:
