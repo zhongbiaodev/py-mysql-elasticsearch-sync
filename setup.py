@@ -12,7 +12,7 @@ setup(
     description='MySQL to Elasticsearch sync tool',
     install_requires=[
         'PyMySQL==0.6.7',
-        'mysql-replication==0.8',
+        'mysql-replication==0.9',
         'requests==2.9.1',
         'PyYAML==3.11',
         'lxml==3.5.0',
