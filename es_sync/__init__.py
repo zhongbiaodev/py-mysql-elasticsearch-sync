@@ -107,7 +107,7 @@ class ElasticSync(object):
         self.binlog_bulk_size = self.config.get('elastic').get('binlog_bulk_size') or DEFAULT_BINLOG_BULKSIZE
 
         self._init_logging()
-        self.flag = False
+        self._force_commit = False
 
     def _init_logging(self):
         logging.basicConfig(filename=self.config['logging']['file'],
@@ -154,14 +154,14 @@ class ElasticSync(object):
                     data = data + item + "\n"
                 else:
                     break
-                if self.flag:
+                if self._force_commit:
                     break
             # print(data)
             print('-'*10)
             if data:
                 self._post_to_es(data)
 
-            self.flag = False
+            self._force_commit = False
 
     def _updater(self, data):
         """
@@ -290,8 +290,7 @@ class ElasticSync(object):
                 continue
 
             if isinstance(binlogevent, XidEvent):  # event_type == 16
-                logging.info('-----XidEvent')
-                self.flag = True
+                self._force_commit = True
                 continue
 
             for row in binlogevent.rows:
