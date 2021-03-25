@@ -14,7 +14,7 @@ setup(
         'PyMySQL==0.6.7',
         'mysql-replication==0.9',
         'requests==2.9.1',
-        'PyYAML==3.11',
+        'PyYAML==5.4',
         'lxml==3.5.0',
         'future==0.15.2'
     ],
