@@ -15,7 +15,7 @@ setup(
         'mysql-replication==0.9',
         'requests==2.9.1',
         'PyYAML==3.11',
-        'lxml==3.5.0',
+        'lxml==4.6.5',
         'future==0.15.2'
     ],
     entry_points={
