@@ -5,13 +5,14 @@ RUN echo "Asia/Shanghai" >  /etc/timezone \
     && pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/ \
     &&  python -m pip install --upgrade pip
 
+RUN apt-get update && apt-get  install mysql-client -y
 
 
 RUN mkdir -p /usr/src/middleware
 
 WORKDIR /usr/src
 
-COPY es_sync .
+COPY  es_sync/*  ./es_sync/
 COPY run.py .
 
 ADD requirements.txt /usr/src
