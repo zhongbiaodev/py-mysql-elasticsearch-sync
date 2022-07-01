@@ -1,3 +1,8 @@
+docker部署需要挂载 middleware 目录，config.yaml binlog.info 文件
+
+
+
+
 tips: 原始项目为：  [原始项目](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync)
 
 # py-mysql-elasticsearch-sync
