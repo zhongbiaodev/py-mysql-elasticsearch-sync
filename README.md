@@ -1,7 +1,9 @@
+tips: orginal project：  [orginal project](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync)
+
 # py-mysql-elasticsearch-sync
 Simple and fast MySQL to Elasticsearch sync tool, written in Python.
 
-[中文文档](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/README_CN.md)
+[中文文档](https://github.com/xunhanliu/py-mysql-elasticsearch-sync/blob/master/README_CN.md)
 
 ## Introduction
 This tool helps you to initialize MySQL dump table to Elasticsearch by parsing mysqldump, then incremental sync MySQL table to Elasticsearch by processing MySQL Binlog.
@@ -38,7 +40,7 @@ pip install py-mysql-elasticsearch-sync
 ```
 
 ## Configuration
-There is a [sample config](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/es_sync/sample.yaml) file in repo, you can start by editing it.
+There is a [sample config](https://github.com/xunhanliu/py-mysql-elasticsearch-sync/blob/master/es_sync/sample.yaml) file in repo, you can start by editing it.
 
 ## Running
 Simply run command
@@ -60,14 +62,8 @@ es-sync path/to/your/config.yaml --fromfile
 to start sync, when xml sync is over, it will also start binlog sync.
 
 ## Deployment
-We provide an [upstart script]((https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/upstart.conf)) to help you deploy this tool, you can edit it for your own condition, besides, you can deploy it in your own way.
+We provide an [upstart script]((https://github.com/xunhanliu/py-mysql-elasticsearch-sync/blob/master/upstart.conf)) to help you deploy this tool, you can edit it for your own condition, besides, you can deploy it in your own way.
 
 ## MultiTable Supporting
-Now Multi-table is supported through setting tables in config file, the first table is master as default and the others are slave.
-
-Master table and slave tables must use the same primary key, which is defined via _id.
-
-Table has higher priority than tables.
-
-## TODO
-- [ ] MultiIndex Supporting
+already supported .
+see zh doc-> [中文文档](https://github.com/xunhanliu/py-mysql-elasticsearch-sync/blob/master/README_CN.md)

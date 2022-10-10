@@ -1,3 +1,10 @@
+docker部署需要挂载 middleware 目录，config.yaml binlog.info 文件
+
+
+
+
+tips: 原始项目为：  [原始项目](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync)
+
 # py-mysql-elasticsearch-sync
 一个从MySQL向Elasticsearch同步数据的工具，使用Python实现。
 
@@ -35,7 +42,7 @@ pip install py-mysql-elasticsearch-sync
 ```
 
 ## 配置
-你可以通过修改[配置文件示例](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/es_sync/sample.yaml)来编写自己的配置文件
+你可以通过修改[配置文件示例](https://github.com/xunhanliu/py-mysql-elasticsearch-sync/blob/master/es_sync/sample.yaml)来编写自己的配置文件
 
 ## 运行
 运行命令
@@ -60,14 +67,25 @@ es-sync path/to/your/config.yaml --fromfile
 启动从xml导入，当从xml导入完毕后，它会开始同步binlog
 
 ## 服务管理
-我们写了一个[upstart脚本](https://github.com/zhongbiaodev/py-mysql-elasticsearch-sync/blob/master/upstart.conf)来管理本工具的运行，你也可以用你自己的方式进行部署运行
+我们写了一个[upstart脚本](https://github.com/xunhanliu/py-mysql-elasticsearch-sync/blob/master/upstart.conf)来管理本工具的运行，你也可以用你自己的方式进行部署运行
 
-## 多表支持
-你可以在config文件中配置tables以支持多表，默认tables中第一张表为主表，其余表为从表。
-
-主表和从表主键必须相同，均为_id字段。
-
-当同时设置table和tables时，table优先级较高。
-
-## TODO
-- [ ] 多索引支持
+## 对配置文件新增多索引和middleware的说明
+```yaml
+# 配置映射
+table_mappings:
+  - mysql_table_name: keyword
+    es_index: test
+    es_type: _doc
+    middlewares:
+      - "middleware.keyword:process_id"
+    mapping:
+      _id: id
+  - mysql_table_name: user
+    es_index: user
+    es_type: _doc
+    mapping:
+      _id: id
+    middlewares:
+```
+mysql_table_name :keyword   表示从keyword表中读取数据，
+在每行数据处理过程中，先经过 mapping 操作，然后经过  middleware.keyword:process_id 的中间件的操作，最后导入到es /test/_doc 中，
